@@ -30,24 +30,14 @@ MAINTAINER fnndsc "dev@babymri.org"
 ARG UID=1001
 ENV UID=$UID
 
-COPY . /tmp/pfurl
-COPY ./docker-entrypoint.py /dock/docker-entrypoint.py
-
-RUN apt-get update \
-  && apt-get install sudo                                             \
-  && useradd -u $UID -ms /bin/bash localuser                          \
-  && addgroup localuser sudo                                          \
-  && echo "localuser:localuser" | chpasswd                            \
-  && adduser localuser sudo                                           \
-  && apt-get install -y libssl-dev libcurl4-openssl-dev bsdmainutils vim net-tools inetutils-ping \
-  && pip install --upgrade pip					      \
-  && pip install /tmp/pfurl && rm -fr /tmp/pfurl
-
-RUN chmod 777 /dock                                                   \
-  && chmod 777 /dock/docker-entrypoint.py                             \
-  && echo "localuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-ENTRYPOINT ["/dock/docker-entrypoint.py"]
+COPY . /src/pfurl
+RUN apt-get update &&                                    \
+    apt-get install -qq libssl-dev libcurl4-openssl-dev  \
+    && pip install /src/pfurl                            \
+    && rm -rf /src                                       \
+    && useradd -M -u $UID pfurl
 
 # Start as user $UID
 USER $UID
+
+ENTRYPOINT ["/usr/local/bin/pfurl"]
