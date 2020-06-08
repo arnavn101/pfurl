@@ -26,18 +26,10 @@
 FROM fnndsc/ubuntu-python3:latest
 MAINTAINER fnndsc "dev@babymri.org"
 
-# Pass a UID on build command line (see above) to set internal UID
-ARG UID=1001
-ENV UID=$UID
-
 COPY . /src/pfurl
 RUN apt-get update &&                                    \
     apt-get install -qq libssl-dev libcurl4-openssl-dev  \
     && pip install /src/pfurl                            \
     && rm -rf /src                                       \
-    && useradd -M -u $UID pfurl
-
-# Start as user $UID
-USER $UID
 
 ENTRYPOINT ["/usr/local/bin/pfurl"]
