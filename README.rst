@@ -34,53 +34,20 @@ Various authentication options for verifying identify with the remote service ar
 Installation
 ************
 
-Installation is relatively straightforward, and we recommend using either python virtual environments or docker.
+Use **pip** or **Docker**.
 
-Python Virtual Environment
-==========================
 
-On Ubuntu, install the Python virtual environment creator
-
-.. code-block:: bash
-
-  sudo apt install virtualenv virtualenvwrapper python3-tk
-
-Then, create a directory for your virtual environments e.g.:
+Using pip
+=========
 
 .. code-block:: bash
 
-  mkdir ~/python-envs
+    pip install pfurl
 
-You might want to add to your .bashrc file these two lines:
-
-.. code-block:: bash
-
-    export WORKON_HOME=~/python-envs
-    source /usr/local/bin/virtualenvwrapper.sh
-
-Then you can source your .bashrc and create a new Python3 virtual environment:
-
-.. code-block:: bash
-
-    source .bashrc
-    mkvirtualenv --python=python3 chris_env
-
-To activate or "enter" the virtual env:
-
-.. code-block:: bash
-
-    workon python_env
-
-To deactivate virtual env:
-
-.. code-block:: bash
-
-    deactivate
+Scroll down to :ref:`examples_section`.
 
 Using the ``fnndsc/pfurl`` container
 ====================================
-
-The easiest option however, is to just use the ``fnndsc/pfurl`` container image.
 
 .. code-block:: bash
 
@@ -183,6 +150,8 @@ For the most up-to-date usage of ``pfurl``, consult the `pfurl wiki page <https:
 
         --msg <JSONpayload>
         The actual JSON formatted payload to transmit to remote service.
+
+.. _examples_section:
 
 ********
 Examples
