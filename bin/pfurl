@@ -9,20 +9,20 @@
 
 import json
 import ast
-from pfurl import man
+from pfurl import args_help
 
 
 if __name__ == '__main__':
-    args = man.parser.parse_args()
+    args = args_help.parser.parse_args()
     # TODO do we care about exit status?
     if args.desc:
-        man.print_long_description()
+        args_help.print_long_description()
     if args.synopsis:
-        man.print_short_description()
+        args_help.print_short_description()
     if args.man:
-        man.man(args.man)
+        args_help.print_man_page(args.man)
     if args.version:
-        man.print_version()
+        args_help.print_version()
 
     parameters = vars(args)
 

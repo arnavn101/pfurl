@@ -1,218 +1,216 @@
-from colorama import Fore as Colors
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-import pkg_resources
+"""
+Colorful documentation in the form of Python strings.
+"""
+from colorama import Fore as Colors, Style
 from pfmisc import local_ip_address
 
-
-def indent(string: str, spaces=4):
-    """Add some spaces in front of every newline character."""
-    space = '\n' + (' ' * spaces)
-    return space + string.replace('\n', space)
+LOCAL_IP_ADDRESS = local_ip_address()
+EXAMPLE_HTTP = f'http://{LOCAL_IP_ADDRESS}:5005/api/v1/cmd'
 
 
-# get package version number from setup.py
-# https://stackoverflow.com/a/2073599/6023006
-VERSION = pkg_resources.require('pfurl')[0].version
+_PUSHPATH = f'        {Colors.CYAN}{Style.BRIGHT}pushPath{Style.NORMAL}' \
+               f'            {Colors.MAGENTA}push a filesystem path over HTTP.'
 
-DESCRIPTION_TEXT = f"""
-`pfurl` is a communications program that sends http-type curl 
-data to a remote service. Although it is mostly used in the 
-"pf" family of programs and in the ChRIS suite, it can be also
-used a general-purpose curl replacement.
+_PULLPATH = f'        {Colors.CYAN}{Style.BRIGHT}pullPath{Style.NORMAL}' \
+               f'            {Colors.MAGENTA}pull a filesystem path over HTTP.'
 
-In addition to sending JSON-formatted strings to a service, 
-`pfurl` can also send files and whole directories -- the latter
-being a zip compression of a directory tree.
+_COMMANDS = f"""
+This script/module provides CURL-based GET/PUT/POST communication over http
+to a remote REST-like service: {Colors.GREEN}
 
-Various authentication options for verifying identify with the
-remote service are also available.
-"""
+     ./pfurl.py [--auth <username:passwd>] [--verb <GET/POST>]   \\
+                --http <IP>[:<port>]</some/path/>
 
-EXAMPLE = r"""
-EXAMPLE
+{Colors.WHITE}
+Where --auth is an optional authorization to pass to the REST API,
+--verb denotes the REST verb to use and --http specifies the REST URL.
 
-    Say 'hello' to a `pfcon` service listening on the localhost at port 5005
-    and print response "prettily" using an indent of 4.
-    
-        pfurl                                                   \
-            --verb POST --raw                                   \
-            --http http://localhost:5005/api/v1/cmd             \
-            --jsonwrapper 'payload'                             \
-            --msg                                               \
-                '{  "action": "hello",
-                    "meta": {
-                        "askAbout":     "sysinfo",
-                        "echoBack":     "Hi there!",
-                        "service":      "host"
-                    }
-                }' --quiet --jsonpprintindent 4
+Additionally, a 'message' described in JSON syntax can be pushed to the
+remote service, in the following syntax:
+{Colors.GREEN}
+     pfurl     [--auth <username:passwd>] [--verb <GET/POST>]   \\
+                --http <IP>[:<port>]</some/path/>               \\
+               [--msg <JSON-formatted-string>]
 
-"""
+{Colors.WHITE}
+In the case of the 'pman' system this --msg flag has very specific
+contextual syntax, for example:
+{Colors.GREEN}
 
-FULL_DESCRIPTION = f"""
+     pfurl      --verb POST --http {EXAMPLE_HTTP}--msg \\
+                    '{{  "action": "run",
+                        "meta": {{
+                            "cmd":      "cal 7 1970",
+                            "auid":     "rudolphpienaar",
+                            "jid":      "<jid>-1",
+                            "threaded": true
+                        }}
+                    }}'
+
+
 {Colors.CYAN}
-        __            _ 
-       / _|          | |
- _ __ | |_ _   _ _ __| |
-| '_ \|  _| | | | '__| |
-| |_) | | | |_| | |  | |
-| .__/|_|  \__,_|_|  |_|
-| |                     
-|_|                     
 
+The following specific action directives are directly handled by script:
 
-                            Process-File-over-URL
+{_PUSHPATH}
 
-           A simple URL-based communication and control script.
+{_PULLPATH}
 
-                              -- version {Colors.YELLOW}{VERSION}{Colors.CYAN} --
+{Colors.YELLOW}
+To get detailed help on any of the above commands, type
+{Colors.CYAN}
 
-    {indent(DESCRIPTION_TEXT)}
-
-{Colors.RED}
-
-              +---------------------------------------------------------+
-              | Use --auth <user>:<password> and --authToken <token>    |
-              |         arguments for secure communication.             |    
-              +---------------------------------------------------------+
+    ./pfurl.py --man <pushPath|pullPath>
 {Colors.RESET}
-
-
-
-    NAME
-
-            pfurl 
-
-        - curl-type http communication client.
-
-    USAGE
-
-            pfurl
 """
 
+_PUSHPATH += f"""
+{Colors.RESET}
+This pushes a file over HTTP. The 'meta' dictionary
+can be used to specify content specific information
+and other information.
 
-def nat(num):
-    """Converts a value to a positive number, or throws a TypeError"""
-    num = int(num)
-    if num < 1:
-        raise TypeError(f'{num} < 1')
-    return num
+Note that the "file" server is typically *not* on the
+same port as the `pman` process. Usually a prior call
+must be made to `pman` to start a one-shot listener
+on a given port. This port then accepts the file transfer
+from the 'pushPath' method.
 
+The "meta" dictionary consists of several nested
+dictionaries. In particular, the "remote/path"
+field can be used to suggest a location on the remote
+filesystem to save the transmitted data. Successful
+saving to this path depends on whether or not the
+remote server process actually has permission to
+write in that location.
 
-parser = ArgumentParser(allow_abbrev=False,
-                        formatter_class=ArgumentDefaultsHelpFormatter)
+{Colors.YELLOW}EXAMPLE:
+{Colors.GREEN}
 
-# we cannot customize the order of appearance so leave these out
-# description=man.LONG_DESCRIPTION,
-# epilog=man.EXAMPLE,
+pfurl --verb POST --http {EXAMPLE_HTTP} --msg """ + r"""\
+    '{  "action": "pushPath",
+        "meta":
+            {
+                "local":
+                    {
+                        "path":         "/path/on/client"
+                    },
+                "remote":
+                    {
+                        "path":         "/path/on/server"
+                    },
+                "transport":
+                    {
+                        "mechanism":    "compress",
+                        "compress": {
+                            "archive":  "zip",
+                            "unpack":   true,
+                            "cleanup":  true
+                        }
+                    }
+            }
+    }'
+""" + F"""
+{Colors.YELLOW}ALTERNATE -- using copy/symlink:
+{Colors.LIGHTGREEN_EX}
 
+pfurl --verb POST --http {EXAMPLE_HTTP} --msg """ + r"""\
+    '{  "action": "pushPath",
+        "meta":
+            {
+                "local":
+                    {
+                        "path":         "/path/on/client"
+                    },
+                "remote":
+                    {
+                        "path":         "/path/on/server"
+                    },
+                "transport":
+                    {
+                        "mechanism":    "copy",
+                        "copy": {
+                            "symlink": true
+                        }
+                    }
+            }
+    }'
+""" + Colors.RESET
 
-parser.add_argument('--msg',
-                    metavar='<JSONpayload>',
-                    type=str,
-                    help='Message to send to pman or similar listener')
-parser.add_argument('--verb',
-                    metavar='RESTVERB',
-                    type=str,
-                    help='The REST verb to use for the remote service')
-parser.add_argument('--http',
-                    metavar='http://<IP>[:<port>]</some/path/>',
-                    default=f'{local_ip_address()}:5055',
-                    help='The address of the remote service')
-parser.add_argument('--httpProxy',
-                    metavar='[http://]<IP>[:<port>]',
-                    type=str,
-                    help='If specified, instruct `pfurl` to use the proxy as specified. '
-                         'Currently, only "http" is supported. '
-                         '(example: --httpProxy http://proxy.host.org:1234)')
-parser.add_argument('--auth',
-                    metavar='<user>:<passwd>',
-                    type=str,
-                    help='A user name and password authentication string')
-parser.add_argument('--jsonwrapper',
-                    metavar='<outerMsgJSONwrapper>',
-                    type=str,
-                    help='An optional outer wrapper for the JSON payload')
-parser.add_argument('--quiet',
-                    action='store_true',
-                    help='if specified, only echo the final JSON payload returned'
-                         '\nfrom remote server')
-parser.add_argument('--raw',
-                    action='store_true',
-                    help='Do not wrap return data from remote call in a JSON wrapper')
-parser.add_argument('--oneShot',
-                    action='store_true',
-                    help='Transmit a shutdown control sequence to remote server '
-                         'after communicating. This of course only works for services that '
-                         'understand the shutdown protocol')
-parser.add_argument('--man',
-                    metavar='<topic>',
-                    type=str,
-                    help='Provide detailed help on various topics')
-parser.add_argument('--desc', '-x',
-                    action='store_true',
-                    help="Provide an overview help page")
-parser.add_argument('--synopsis', '-y',
-                    action='store_true',
-                    help="Provide a short help summary")
-parser.add_argument('--content-type',
-                    metavar='type',
-                    type=str,
-                    help='Curl content-type descriptor')
-parser.add_argument('--jsonpprintindent',
-                    metavar='<indent>',
-                    type=nat,
-                    help='Print return JSON payload from remote service using')
-parser.add_argument('--httpResponseBodyParse',
-                    action='store_true',
-                    help='Interpret the return payload as encapsulated in an http response')
-parser.add_argument('--version',
-                    action='store_true',
-                    help='Print version number')
-parser.add_argument('--unverifiedCerts',
-                    action='store_true',
-                    help='Allows transmission of https requests with self signed SSL certificates')
-parser.add_argument('--authToken',
-                    metavar='<token>',
-                    type=str,
-                    help='A token to transmit for authentication with an http request')
-parser.add_argument('--verbosity', '-v',
-                    metavar='<N>',
-                    type=int,
-                    default=0,
-                    help='Set the verbosity level. "0" typically means no/minimal output. '
-                         'Allows for more fine tuned output control as opposed to '
-                         '"--quiet" that effectively silences everything')
+_PULLPATH += f"""
+{Colors.RESET}
+This pulls data over HTTP from a remote server.
+The 'meta' dictionary can be used to specify content
+specific information and other detail.
 
-# Insert a newline character before every optional argument in the usage string
-# and remove the first line (which said "usage: pfurl [-h]").
-OPTIONS_ON_LINES = '\n[--'.join(parser.format_usage().replace('\n', ' ').split('[--')[1:])
-FULL_DESCRIPTION += indent(OPTIONS_ON_LINES, 16)
-EXAMPLE = indent(EXAMPLE, 4)
+Note that the "file" server is typically *not* on the
+same port as a `pman` process. Usually a prior call
+must be made to `pman` to start a one-shot listener
+on a given port. This port then accepts the file transfer
+from the 'pullPath' method.
 
-# produce argparse's help section without the usage line
-ARGS_HELP = parser.format_help().replace(parser.format_usage(), '\n')
-ARGS_HELP = ARGS_HELP.replace('optional arguments:\n', '')
-ARGS_HELP = F'\n    ARGS{ARGS_HELP}'
-# don't indent args.help, argparse figures out the number of columns we can use
+The "meta" dictionary consists of several nested
+dictionaries. In particular, the "remote/path"
+field can be used to specify a location on the remote
+filesystem to pull. Successful retrieve from this path
+depends on whether or not the remote server process actually
+has permission to read in that location.
 
+{Colors.YELLOW}EXAMPLE -- using zip:
+{Colors.GREEN}
 
-def print_version():
-    parser.exit(1, f'Version: {VERSION}\n')
+pfurl --verb POST --http {EXAMPLE_HTTP} --msg """ + r"""\
+    '{  "action": "pullPath",
+        "meta":
+            {
+                "local":
+                    {
+                        "path":         "/path/on/client"
+                    },
+                "remote":
+                    {
+                        "path":         "/path/on/server"
+                    },
+                "transport":
+                    {
+                        "mechanism":    "compress",
+                        "compress": {
+                            "archive":  "zip",
+                            "unpack":   true,
+                            "cleanup":  true
+                        }
+                    }
+            }
+    }'
+""" + f"""
+{Colors.YELLOW}ALTERNATE -- using copy/symlink:
+{Colors.LIGHTGREEN_EX}
 
+pfurl --verb POST --http {EXAMPLE_HTTP} --msg """ + r"""\
+    '{  "action": "pullPath",
+        "meta":
+            {
+                "local":
+                    {
+                        "path":         "/path/on/client"
+                    },
+                "remote":
+                    {
+                        "path":         "/path/on/server"
+                    },
+                "transport":
+                    {
+                        "mechanism":    "copy",
+                        "copy": {
+                            "symlink": true
+                        }
+                    }
+            }
+    }'
+""" + Colors.RESET
 
-def print_short_description():
-    print(FULL_DESCRIPTION)
-    print(EXAMPLE)
-    parser.exit(1)
-
-
-def print_long_description():
-    print(FULL_DESCRIPTION)
-    print(ARGS_HELP)
-    print(EXAMPLE)
-    parser.exit(1)
-
-
-def man(topic: str):
-    parser.exit(0)
+DICTIONARY = {
+    'commands': _COMMANDS,
+    'pushPath': _PUSHPATH,
+    'pullPath': _PULLPATH
+}
