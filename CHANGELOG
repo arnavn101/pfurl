@@ -1,0 +1,18 @@
+# Fields
+
+- remove `__name__`
+
+# __init__
+
+- rename `b_quiet` to `quiet`
+- rename `b_raw` to `raw`
+- rename `b_oneShot` to `oneshot`
+- rename `b_httpResponseBodyParse` to `http_response_body_parse`
+- rename `debugFile` to `debug_file`
+
+- remove `useDebug`
+- remove `b_quiet`
+
+# Debug
+
+- no longer outputs to `~/tmp` by default
